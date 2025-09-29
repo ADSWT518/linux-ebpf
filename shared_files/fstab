@@ -1,0 +1,6 @@
+# Static information about the filesystems.
+# See fstab(5) for details.
+
+# <file system> <dir> <type> <options> <dump> <pass>
+/swap/swapfile none swap defaults 0 0
+host_share /home/arch/shared 9p trans=virtio,version=9p2000.L,_netdev,uid=1000,gid=1000 0 0

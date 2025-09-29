@@ -1,0 +1,5 @@
+*.qcow2
+
+*.o
+vmlinux.h
+shared_files/ebpf_code/test_exec

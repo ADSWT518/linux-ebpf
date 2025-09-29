@@ -1,0 +1,3 @@
+[submodule "linux"]
+	path = linux
+	url = git@git.zju.edu.cn:22521212/linux.git
