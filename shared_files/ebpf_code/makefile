@@ -1,8 +1,7 @@
-# Makefile for comparing manual eBPF instruction building vs. libbpf-based compilation
-
-# --- 编译器和通用设置 ---
+# --- 编译器和工具定义 ---
 CC = clang
-CFLAGS = -g -O2
+OBJDUMP = llvm-objdump
+CFLAGS = -g -O2 # -g 是生成源码级调试信息的关键
 
 # --- 文件和目标定义 ---
 
@@ -10,34 +9,41 @@ CFLAGS = -g -O2
 MANUAL_SRC = test.c
 MANUAL_EXEC = test_exec
 
-# 路径 2: 现代 eBPF C 程序
-BPF_C_SRC = test.bpf.c
-BPF_OBJ = $(BPF_C_SRC:.c=.o)
+# 路径 2: 自动发现并处理所有 eBPF C 程序
+# 查找所有 .bpf.c 源文件
+BPF_C_SRCS = $(wildcard *.bpf.c)
+# 生成对应的 .bpf.o 目标文件列表
+BPF_OBJS = $(BPF_C_SRCS:.c=.o)
+# 生成对应的 .bpf.s 汇编文件列表
+BPF_ASMS = $(BPF_C_SRCS:.c=.s)
 
 # vmlinux.h 的文件名
 VMLINUX_H = vmlinux.h
 
 # --- 内核和 bpftool 设置 ---
-# 用户可以通过 `make KDIR=/path/to/linux` 来覆盖它
 KDIR ?= $(shell pwd)/../../linux
 VMLINUX_PATH = $(KDIR)/vmlinux
 
 # --- 构建规则 ---
 
-# 默认目标：构建所有东西，用于对比
-all: $(MANUAL_EXEC) $(BPF_OBJ)
+# 默认目标：构建所有内容
+all: $(MANUAL_EXEC) $(BPF_OBJS) $(BPF_ASMS)
 
 # 规则 1: 编译手动指令构建器 (test.c)
-# 这是一个标准的 C 程序编译，不需要特殊库
 $(MANUAL_EXEC): $(MANUAL_SRC)
 	@echo "  CC      [Manual Builder] $(MANUAL_SRC) -> $@"
 	$(CC) $(CFLAGS) $(MANUAL_SRC) -o $(MANUAL_EXEC)
 
-# 规则 2: 编译 eBPF C 代码为 eBPF 字节码 (test.bpf.c)
-# 这需要 -target bpf，并且依赖 vmlinux.h
-$(BPF_OBJ): $(BPF_C_SRC) $(VMLINUX_H)
-	@echo "  BPF-CC  [eBPF C Code]    $(BPF_C_SRC) -> $@"
-	$(CC) $(CFLAGS) -target bpf -I. -c $(BPF_C_SRC) -o $(BPF_OBJ)
+# 规则 2: 编译 eBPF C 代码为 eBPF 字节码 (.o 文件)
+%.bpf.o: %.bpf.c $(VMLINUX_H)
+	@echo "  BPF-CC  [eBPF Code]      $< -> $@"
+	$(CC) $(CFLAGS) -target bpf -I. -c $< -o $@
+
+# 新增规则 3: 从 .o 文件生成汇编文件 (.s 文件)
+# 这条规则依赖于对应的 .o 文件，确保编译完成后再进行反汇编
+%.bpf.s: %.bpf.o
+	@echo "  OBJDUMP [eBPF Assembly]  $< -> $@"
+	$(OBJDUMP) -d -S $< > $@
 
 # 规则：生成 vmlinux.h (如果不存在)
 $(VMLINUX_H):
@@ -53,7 +59,7 @@ $(VMLINUX_H):
 # --- 清理规则 ---
 clean:
 	@echo "  CLEAN"
-	rm -f $(MANUAL_EXEC) $(BPF_OBJ) $(VMLINUX_H)
+	rm -f $(MANUAL_EXEC) $(BPF_OBJS) $(BPF_ASMS) $(VMLINUX_H)
 
 # 将 vmlinux.h 标记为 .SECONDARY，防止 make 自动删除它
 .SECONDARY: $(VMLINUX_H)
