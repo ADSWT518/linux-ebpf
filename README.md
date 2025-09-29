@@ -79,6 +79,7 @@ cd $LINUX_EBPF
 ### 2.3 Set auto-mount
 
 ```shell
+# 虚拟机上
 # 只需要运行一次手动 mount
 sudo mount -t 9p -o trans=virtio,version=9p2000.L host_share ~/shared
 
@@ -87,7 +88,7 @@ sudo cp ~/shared/fstab /etc/fstab
 
 ## Step 3. Compile and verify the eBPF code
 
-我们实际上只需要走到 eBPF verifier 这一步，不需要真的运行。
+我们实际上只需要走到 eBPF verifier 这一步（在 load 之前），不需要真的运行（attach 到某个 kprobe）。
 
 ### 3.1 Compile eBPF code
 
@@ -102,11 +103,12 @@ cd sharef_files/ebpf_code
 make
 ```
 
-### 3.2 Run the eBPF code
+### 3.2 Load the eBPF code
 
-在虚拟机上运行。由于 verify 是 load 之前完成的步骤，所以只要 load 成功则说明通过 verifier ，否则会有 verifier 报错。
+在虚拟机上加载。由于 verify 是 load 之前完成的步骤，所以只要 load 成功则说明通过 verifier ，否则会有 verifier 报错。
 
 ```shell
+# 虚拟机上
 cd ~/shared/ebpf_code
 
 # 方式1
