@@ -17,13 +17,22 @@ static inline int bpf(int cmd, union bpf_attr *attr, unsigned int size) {
 
 int main() {
     // 1. 定义eBPF指令数组
-    // 这个程序非常简单：
-    //   - 将立即数 1 移动到 R0 寄存器 (mov r0, 1)
+    // 这个程序稍微复杂一些，执行一个加法运算： 5 + 7
+    //   - 将立即数 5 移动到 R1 寄存器 (mov r1, 5)
+    //   - 将立即数 7 移动到 R2 寄存器 (mov r2, 7)
+    //   - 将 R1 和 R2 相加，结果存回 R1 (add r1, r2)
+    //   - 将结果从 R1 移动到 R0 (mov r0, r1)，因为返回值必须在 R0
     //   - 程序退出，并返回 R0 中的值 (exit)
     struct bpf_insn prog[] = {
-        // BPF_MOV64_IMM(dst_reg, imm)
-        { .code = BPF_ALU64 | BPF_K | BPF_MOV, .dst_reg = BPF_REG_0, .src_reg = 0, .off = 0, .imm = 1 },
-        // BPF_EXIT_INSN()
+        // mov r1, 5
+        { .code = BPF_ALU64 | BPF_K | BPF_MOV, .dst_reg = BPF_REG_1, .src_reg = 0, .off = 0, .imm = 5 },
+        // mov r2, 7
+        { .code = BPF_ALU64 | BPF_K | BPF_MOV, .dst_reg = BPF_REG_2, .src_reg = 0, .off = 0, .imm = 7 },
+        // add r1, r2
+        { .code = BPF_ALU64 | BPF_X | BPF_ADD, .dst_reg = BPF_REG_1, .src_reg = BPF_REG_2, .off = 0, .imm = 0 },
+        // mov r0, r1
+        { .code = BPF_ALU64 | BPF_X | BPF_MOV, .dst_reg = BPF_REG_0, .src_reg = BPF_REG_1, .off = 0, .imm = 0 },
+        // exit
         { .code = BPF_JMP | BPF_EXIT, .dst_reg = 0, .src_reg = 0, .off = 0, .imm = 0 },
     };
     
@@ -60,6 +69,13 @@ int main() {
     }
 
     printf("eBPF程序加载成功！ 程序文件描述符 (Program FD) = %d\n", prog_fd);
+    
+    // 如果加载成功，我们可以查看验证器日志，了解它是如何分析程序的
+    if (strlen(log_buf) > 0) {
+        printf("------ Kernel Verifier Log (Success) ------\n");
+        printf("%s\n", log_buf);
+        printf("-------------------------------------------\n");
+    }
 
     // 在实际应用中，你会使用这个 prog_fd 将程序附加到某个挂钩点
     // (例如，一个套接字)。在这里，我们只是简单地关闭它。
