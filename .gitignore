@@ -1,7 +1,8 @@
 *.qcow2
 
 shared_files/ebpf_code/vmlinux.h
-shared_files/ebpf_code/*_exec
-shared_files/ebpf_code/*.o
-shared_files/ebpf_code/*.s
+shared_files/ebpf_code/**/*_exec
+shared_files/ebpf_code/**/*.o
+shared_files/ebpf_code/**/*.skel.h
+shared_files/ebpf_code/**/*.s
 shared_files/ebpf_code/*.log
