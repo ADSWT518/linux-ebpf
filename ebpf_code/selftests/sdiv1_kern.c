@@ -1,7 +1,7 @@
 #include <linux/bpf.h>
 #include <limits.h>
 #include <bpf/bpf_helpers.h>
-#include "../../../linux/tools/testing/selftests/bpf/progs/bpf_misc.h"
+#include "../../linux/tools/testing/selftests/bpf/progs/bpf_misc.h"
 
 SEC("kprobe/__x64_sys_execve")
 void sdiv32_overflow_rr(struct pt_regs *ctx)

@@ -1,7 +1,7 @@
 #include <linux/bpf.h>
 #include <limits.h>
 #include <bpf/bpf_helpers.h>
-#include "../../../linux/tools/testing/selftests/bpf/progs/bpf_misc.h"
+#include "../../linux/tools/testing/selftests/bpf/progs/bpf_misc.h"
 
 SEC("flow_dissector")
 void flow_keys_illegal_variable_offset_alu(struct __sk_buff *skb)

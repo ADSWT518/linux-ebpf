@@ -56,7 +56,7 @@ $(VMLINUX_H):
 		echo "      Or specify kernel source path with 'make KDIR=/path/to/linux/source'"; \
 		exit 1; \
 	fi
-	./bpftool btf dump file $(VMLINUX_PATH) format c > $(VMLINUX_H)
+	bpftool btf dump file $(VMLINUX_PATH) format c > $(VMLINUX_H)
 
 # --- 清理规则 ---
 clean:

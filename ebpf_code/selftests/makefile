@@ -15,7 +15,7 @@ $(OBJECTS): %_kern.o: %_kern.c
 	clang -g -O0 -target bpf -c $< -o $@
 
 $(SKELETONS): %_kern.skel.h: %_kern.o
-	../bpftool gen skeleton $< > $@
+	bpftool gen skeleton $< > $@
 
 $(EXECUTABLES): %_user_exec: %_user.c %_kern.skel.h
 	clang -g -O0 -Wall $< -lbpf -o $@
